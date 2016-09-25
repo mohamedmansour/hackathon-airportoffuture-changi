@@ -113,8 +113,8 @@
                 return;
             }
             robotMoving = path[path.length - pixelsRemaining];
-            pixelsRemaining -= 5;
-        }, 500); 
+            pixelsRemaining -= 2;
+        }, 30); 
         robotMoving = path[0];
     }
 
