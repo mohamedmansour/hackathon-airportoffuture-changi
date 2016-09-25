@@ -1,4 +1,4 @@
-(function() {
+var App = (function() {
     var canvas,
         context,
         mapImage,
@@ -10,7 +10,8 @@
         visitedPath,
         robotMoving,
         animateInterval,
-        socketServerInterval;
+        socketServerInterval,
+        sosList = [];
 
     function render() {
         context.drawImage(mapImage, 0, 0);
@@ -135,14 +136,8 @@
         };
     }
 
-    function onNavigate() {
-        var fromGate = from.value;
-        var toGate = to.value;
+    function triggerRobotNavigation(fromGatePosition, toGate) {
         var errors = [];
-
-        if (!gates[fromGate]) {
-            errors.push('From gate does not exist');
-        }
 
         if (!gates[toGate]) {
             errors.push('To gate does not exist');
@@ -159,7 +154,7 @@
             visitedPath = null;
         }
 
-        fromPosition = gates[fromGate];
+        fromPosition = fromGatePosition;
         toPosition = gates[toGate];
 
         easystar.findPath(
@@ -177,6 +172,12 @@
                 }
             });
         easystar.calculate();
+    }
+
+    function onNavigate() {
+        var fromGate = from.value;
+        var toGate = to.value;
+        triggerRobotNavigation(fromGate, toGate);
     }
 
     function animatePath(path) {
@@ -264,15 +265,46 @@
             var command = execution.data.command;
             var data = execution.data.data;
             var executionId = execution.executionId;
-        
+            var responseData = 'Invalid Command';
+
             switch (command) {
+                case 'SOS':
+                    if (gates[data]) {
+                        addSOS(executionId, data);
+                        responseData = 'Response Handled';
+                    }
+                    else {
+                        responseData = 'Invalid Gate: ' + data;
+                    }
+                    break;
                 default:
                     console.log('Command Not Supported', command);
                     break;
             }
 
-            executeCallback(executionId, 'Invalid Command');
+            executeCallback(executionId, responseData);
         })
+    }
+
+    function dispatch(gateName) {
+        triggerRobotNavigation(robotMoving, gateName);
+    }
+
+    function addSOS(id, gateName) {
+        var sosHTML = ' \
+                <span class="sosTitle">Incident at Location \
+                <span class="sosLocation">' + gateName + '</span></span> \
+                <button onclick="App.dispatch(\'' +  gateName + '\')">Dispatch</span> \
+        ';
+        var sosDOM = document.createElement('div');
+        sosDOM.className = 'sos-item';
+        sosDOM.innerHTML = sosHTML;
+
+        if (!sosList.length) {
+            sos.innerHTML = '';
+        }
+        sosList.push(gateName);
+        sos.appendChild(sosDOM)
     }
 
     function executeCallback(executionId, data) {
@@ -297,6 +329,9 @@
         loadImage();
         navigate.addEventListener('click', onNavigate, false);
         startFakeSocketServer();
+
+        // Initial Robot Position.
+        robotMoving = gates['f42'];
     }
 
     // Run this once nad copy output to a new file.
@@ -311,4 +346,8 @@
     }
 
     window.addEventListener('DOMContentLoaded', main);
+
+    return  {
+        dispatch: dispatch
+    }
 })();

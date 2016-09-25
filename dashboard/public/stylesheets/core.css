@@ -10,11 +10,10 @@ a {
 }
 
 #control-panel {
-  display: inline-block;
+  display: none;
 }
 
 #monitor-wrapper {
-  float: left;
   background-color: #444;
   width: 720px;
   height: 416px;
@@ -51,6 +50,20 @@ button {
   border: none;
   padding: 5px;
   cursor: pointer;
-  float: right;
   margin-right: 10px;
+}
+
+.sosTitle {
+  display: inline-block;
+  width: 200px;
+}
+
+.sosLocation {
+    background-color: lightblue;
+    padding: 2px;
+    margin: 0 2px;
+    border-radius: 10px;
+    display: inline-block;
+    width: 40px;
+    text-align: center;
 }
