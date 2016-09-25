@@ -5,14 +5,25 @@
         fromPosition,
         toPosition,
         easystar,
+        originalPath,
         navigationPath,
-        robotMoving;
+        visitedPath,
+        robotMoving,
+        animateInterval;
 
     function render() {
         context.drawImage(mapImage, 0, 0);
 
+        if (visitedPath) {
+            renderPath(visitedPath, {
+                color: '#000000',
+                lineWidth: 2,
+                lineDash: [5]
+            });
+        }
+
         if (navigationPath) {
-            renderPath(fromPosition, toPosition, {
+            renderPath(navigationPath, {
                 color: '#000000'
             });
         }
@@ -42,24 +53,29 @@
         }
     }
 
-    function renderPath(fromPosition, toPosition, params) {
+    function renderPath(path, params) {
+        if (!path.length) {
+            return;
+        }
+
         var lineWidth = params.lineWidth || 4;
         var color = params.color || '#000000';
-
+        var lineDash = params.lineDash || [0];
         var pathIndex = 0;
-        var path;
+        var currentPoint;
 
+        context.setLineDash(lineDash)
         context.lineWidth = lineWidth;
         context.beginPath(); 
         context.strokeStyle = color;
-        context.moveTo(fromPosition.x, fromPosition.y); 
+        context.moveTo(path[0].x, path[0].y); 
 
         do {
-            path = navigationPath[pathIndex];
-            context.lineTo(path.x, path.y);
+            currentPoint = path[pathIndex];
+            context.lineTo(currentPoint.x, currentPoint.y);
             pathIndex = pathIndex + 5;
         }
-        while (pathIndex < navigationPath.length)
+        while (pathIndex < path.length)
 
         context.stroke();
         context.closePath();
@@ -84,6 +100,7 @@
         context.fillStyle = textColor;
         context.textAlign = 'center';
         context.fillText(text, position.x, position.y + 3);
+        context.closePath();
     }
 
     function renderAllGates() {
@@ -135,6 +152,12 @@
             return;
         }
 
+        if (animateInterval) {
+            clearInterval(animateInterval);
+            navigationPath = null;
+            visitedPath = null;
+        }
+
         fromPosition = gates[fromGate];
         toPosition = gates[toGate];
 
@@ -147,6 +170,7 @@
                 if (path === null) {
                     alert("Path was not found.");
                 } else {
+                    originalPath = path;
                     navigationPath = path;
                     animatePath(path);
                 }
@@ -156,13 +180,22 @@
 
     function animatePath(path) {
         var pixelsRemaining = path.length;
-        var animateInterval = setInterval(function() {
+        if (!visitedPath) {
+            //visitedPath = [];
+        }
+        animateInterval = setInterval(function() {
             if (pixelsRemaining <= 0) {
                 clearInterval(animateInterval);
+                navigationPath = null;
                 return;
             }
-            robotMoving = path[path.length - pixelsRemaining];
+
+            var pathIndex = path.length - pixelsRemaining;
+            robotMoving = path[pathIndex];
             pixelsRemaining -= 2;
+
+            navigationPath = originalPath.slice(pathIndex + 1);
+            visitedPath = originalPath.slice(0, pathIndex + 1);
         }, 30); 
         robotMoving = path[0];
     }
