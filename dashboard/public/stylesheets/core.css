@@ -1,6 +1,6 @@
 body {
   padding: 0;
-  font: 300 15px/1.55 "Lato",sans-serif;
+  font: 300 15px/1.55 "Lato",Arial, sans-serif;
   background-color: #fff;
   color: #333;
 }
@@ -55,7 +55,6 @@ button {
 
 .sosTitle {
   display: inline-block;
-  width: 200px;
 }
 
 .sosLocation {
@@ -64,6 +63,5 @@ button {
     margin: 0 2px;
     border-radius: 10px;
     display: inline-block;
-    width: 40px;
     text-align: center;
 }

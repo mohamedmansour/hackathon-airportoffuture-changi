@@ -9,6 +9,7 @@ var App = (function() {
         navigationPath,
         visitedPath,
         robotMoving,
+        concern,
         animateInterval,
         socketServerInterval,
         sosList = [];
@@ -19,14 +20,15 @@ var App = (function() {
         if (visitedPath) {
             renderPath(visitedPath, {
                 color: '#000000',
-                lineWidth: 2,
+                lineWidth: 5,
                 lineDash: [5]
             });
         }
 
         if (navigationPath) {
             renderPath(navigationPath, {
-                color: '#000000'
+                color: '#000000',
+                lineWidth: 6
             });
         }
 
@@ -262,15 +264,19 @@ var App = (function() {
         }
         
         json.data.forEach(function(execution) {
-            var command = execution.data.command;
+            var command = execution.data.command.toLowerCase();
             var data = execution.data.data;
             var executionId = execution.executionId;
             var responseData = 'Invalid Command';
 
             switch (command) {
-                case 'SOS':
+                case 'concern':
+                    handleConcern(data);
+                    responseData = 'Response Handled';
+                    break;
+                case 'sos':
                     if (gates[data]) {
-                        addSOS(executionId, data);
+                        handleSOS(data);
                         responseData = 'Response Handled';
                     }
                     else {
@@ -290,7 +296,18 @@ var App = (function() {
         triggerRobotNavigation(robotMoving, gateName);
     }
 
-    function addSOS(id, gateName) {
+    function handleConcern(data) {
+        var sosHTML = ' \
+                <span class="sosTitle">Concern at Current Location \
+                <span class="sosLocation">' + data + '</span></span> \
+        ';
+        var sosDOM = document.createElement('div');
+        sosDOM.className = 'sos-item';
+        sosDOM.innerHTML = sosHTML;
+        sos.appendChild(sosDOM)
+    }
+
+    function handleSOS(gateName) {
         var sosHTML = ' \
                 <span class="sosTitle">Incident at Location \
                 <span class="sosLocation">' + gateName + '</span></span> \
