@@ -3,7 +3,9 @@
         context,
         mapImage,
         fromPosition,
-        toPosition;
+        toPosition,
+        easystar,
+        navigationPath;
 
     function render() {
         context.drawImage(mapImage, 0, 0);
@@ -16,6 +18,15 @@
         if (toPosition) {
             context.fillStyle = '#00ff00';
             context.fillRect(toPosition.x, toPosition.y, 16, 16);
+        }
+
+        if (navigationPath) {
+            context.fillStyle = '#000000';
+            
+            for (var pathIndex in navigationPath) {
+                var path = navigationPath[pathIndex];
+                context.fillRect(path.x, path.y, 6, 6);
+            }
         }
     }
 
@@ -37,7 +48,7 @@
         image.async = true;
         image.onload = function() {
             mapImage = this;
-            update();
+            mapLoaded();
         };
         image.src = '/images/map.png';
     }
@@ -70,6 +81,60 @@
 
         fromPosition = gates[fromGate];
         toPosition = gates[toGate];
+
+        easystar.findPath(
+            Math.floor(fromPosition.x),
+            Math.floor(fromPosition.y),
+            Math.floor(toPosition.x),
+            Math.floor(toPosition.y),
+            function (path) {
+                if (path === null) {
+                    alert("Path was not found.");
+                } else {
+                    navigationPath = path;
+                }
+            });
+        easystar.calculate();
+    }
+
+    function mapLoaded() {
+        // Start the update game loop.
+        update();
+        preparePathFinding();
+    }
+
+    function preparePathFinding() {
+        easystar = new EasyStar.js();
+
+        // Normalize each pixel for each map, 0 = good, 1 = bad.
+        var width = canvas.clientWidth;
+        var height = canvas.clientHeight;
+        var imageData = context.getImageData(0, 0, width, height);
+        var pixel = imageData.data;
+        var r = 0, g = 1, b = 2;
+        var grid = [];
+        var row = [];
+
+        for (var p = 0; p < pixel.length; p+=4) {
+            // If white then change to 1;
+            if (pixel[p+r] > 253 && pixel[p+g] > 253 && pixel[p+b] > 253) {
+                row.push(1);
+            }
+            else {
+                row.push(0);
+            }
+
+            // Row
+            if ((p/4 + 1) % width === 0) {
+                grid.push(row);
+                row = [];
+            }
+        }
+        
+        easystar.setGrid(grid);
+        easystar.setAcceptableTiles([0]);
+        easystar.enableDiagonals();
+        //easystar.setIterationsPerCalculation(1000);
     }
 
     function main() {
