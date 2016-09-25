@@ -270,6 +270,9 @@ var App = (function() {
             var responseData = 'Invalid Command';
 
             switch (command) {
+                case 'getdistance':
+                    responseData = handleDistance(data);
+                    break;
                 case 'concern':
                     handleConcern(data);
                     responseData = 'Response Handled';
@@ -294,6 +297,16 @@ var App = (function() {
 
     function dispatch(gateName) {
         triggerRobotNavigation(robotMoving, gateName);
+    }
+
+    function handleDistance(data) {
+        var destination = gates[data];
+        if (!destination) {
+            return 'Gate not found';
+        }
+
+        var theta = Math.atan2(destination.y - robotMoving.y, destination.x - robotMoving.x);
+        return 'It is ' + Math.abs(theta);
     }
 
     function handleConcern(data) {
