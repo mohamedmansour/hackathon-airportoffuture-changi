@@ -12,28 +12,78 @@
         context.drawImage(mapImage, 0, 0);
 
         if (navigationPath) {
-            context.fillStyle = '#000000';
-
-            for (var pathIndex in navigationPath) {
-                var path = navigationPath[pathIndex];
-                context.fillRect(path.x, path.y, 6, 6);
-            }
+            renderPath(fromPosition, toPosition, {
+                color: '#000000'
+            });
         }
 
         if (fromPosition) {
-            context.fillStyle = '#007FFF';
-            context.fillRect(fromPosition.x, fromPosition.y, 16, 16);
+            renderPosition(fromPosition, {
+                text: 'from',
+                fillColor: '#007FFF',
+                textColor: 'white'
+            });
         }
 
         if (toPosition) {
-            context.fillStyle = '#007FFF';
-            context.fillRect(toPosition.x, toPosition.y, 16, 16);
+            renderPosition(toPosition, {
+                text: 'to',
+                fillColor: '#007FFF',
+                textColor: 'white'
+            });
         }
 
         if (robotMoving) {
-            context.fillStyle = '#BFFF00';
-            context.fillRect(robotMoving.x, robotMoving.y, 16, 16);
+            renderPosition(robotMoving, {
+                text: 'R',
+                fillColor: '#BFFF00',
+                textColor: 'black'
+            });
         }
+    }
+
+    function renderPath(fromPosition, toPosition, params) {
+        var lineWidth = params.lineWidth || 4;
+        var color = params.color || '#000000';
+
+        var pathIndex = 0;
+        var path;
+
+        context.lineWidth = lineWidth;
+        context.beginPath(); 
+        context.strokeStyle = color;
+        context.moveTo(fromPosition.x, fromPosition.y); 
+
+        do {
+            path = navigationPath[pathIndex];
+            context.lineTo(path.x, path.y);
+            pathIndex = pathIndex + 5;
+        }
+        while (pathIndex < navigationPath.length)
+
+        context.stroke();
+        context.closePath();
+    }
+
+    function renderPosition(position, params) {
+        var diameter = params.diameter || 32;
+        var text = params.text || '';
+        var textColor = params.textColor || '#ffffff';
+        var fillColor = params.fillColor || '#000000';
+
+        if (!position || position.x === undefined || position.y === undefined) {
+            console.error('Dev Error in renderPosition');
+            return;
+        }
+
+        context.beginPath();
+        context.fillStyle = fillColor;
+        context.arc(position.x, position.y, diameter / 2, 0, 2 * Math.PI, false);
+        context.fill();
+        context.font = '8pt Lato';
+        context.fillStyle = textColor;
+        context.textAlign = 'center';
+        context.fillText(text, position.x, position.y + 3);
     }
 
     function renderAllGates() {
@@ -105,7 +155,6 @@
     }
 
     function animatePath(path) {
-        alert(path.length);
         var pixelsRemaining = path.length;
         var animateInterval = setInterval(function() {
             if (pixelsRemaining <= 0) {
