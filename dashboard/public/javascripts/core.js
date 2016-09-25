@@ -9,7 +9,8 @@
         navigationPath,
         visitedPath,
         robotMoving,
-        animateInterval;
+        animateInterval,
+        socketServerInterval;
 
     function render() {
         context.drawImage(mapImage, 0, 0);
@@ -237,7 +238,57 @@
         easystar.setGrid(grid);
         easystar.setAcceptableTiles([0]);
         easystar.enableDiagonals();
-        //easystar.setIterationsPerCalculation(1000);
+    }
+
+    function startFakeSocketServer() {
+        socketServerInterval = setInterval(function() {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', '/api', true);
+            xhr.onload = function(e) {
+                if (xhr.status === 200) {
+                    var json = JSON.parse(xhr.responseText);
+                    handleServerResponse(json);
+                }
+            }
+            xhr.send(null);
+        }, 500);
+    }
+
+    function handleServerResponse(json) {
+        if (!json || !json.data) {
+            console.error('Something went wrong in socket', json)
+            return;
+        }
+        
+        json.data.forEach(function(execution) {
+            var command = execution.data.command;
+            var data = execution.data.data;
+            var executionId = execution.executionId;
+        
+            switch (command) {
+                default:
+                    console.log('Command Not Supported', command);
+                    break;
+            }
+
+            executeCallback(executionId, 'Invalid Command');
+        })
+    }
+
+    function executeCallback(executionId, data) {
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '/callback', true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.onload = function(e) {
+            if (xhr.status === 200) {
+                console.log('CALLBACK', xhr.responseText);
+            }
+        }
+        xhr.send(JSON.stringify({
+            status: true,
+            data: data,
+            executionId: executionId
+        }));
     }
 
     function main() {
@@ -245,6 +296,7 @@
         context = canvas.getContext('2d');
         loadImage();
         navigate.addEventListener('click', onNavigate, false);
+        startFakeSocketServer();
     }
 
     // Run this once nad copy output to a new file.
