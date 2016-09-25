@@ -5,28 +5,34 @@
         fromPosition,
         toPosition,
         easystar,
-        navigationPath;
+        navigationPath,
+        robotMoving;
 
     function render() {
         context.drawImage(mapImage, 0, 0);
 
-        if (fromPosition) {
-            context.fillStyle = '#00ff00';
-            context.fillRect(fromPosition.x, fromPosition.y, 16, 16);
-        }
-
-        if (toPosition) {
-            context.fillStyle = '#00ff00';
-            context.fillRect(toPosition.x, toPosition.y, 16, 16);
-        }
-
         if (navigationPath) {
             context.fillStyle = '#000000';
-            
+
             for (var pathIndex in navigationPath) {
                 var path = navigationPath[pathIndex];
                 context.fillRect(path.x, path.y, 6, 6);
             }
+        }
+
+        if (fromPosition) {
+            context.fillStyle = '#007FFF';
+            context.fillRect(fromPosition.x, fromPosition.y, 16, 16);
+        }
+
+        if (toPosition) {
+            context.fillStyle = '#007FFF';
+            context.fillRect(toPosition.x, toPosition.y, 16, 16);
+        }
+
+        if (robotMoving) {
+            context.fillStyle = '#BFFF00';
+            context.fillRect(robotMoving.x, robotMoving.y, 16, 16);
         }
     }
 
@@ -92,9 +98,24 @@
                     alert("Path was not found.");
                 } else {
                     navigationPath = path;
+                    animatePath(path);
                 }
             });
         easystar.calculate();
+    }
+
+    function animatePath(path) {
+        alert(path.length);
+        var pixelsRemaining = path.length;
+        var animateInterval = setInterval(function() {
+            if (pixelsRemaining <= 0) {
+                clearInterval(animateInterval);
+                return;
+            }
+            robotMoving = path[path.length - pixelsRemaining];
+            pixelsRemaining -= 5;
+        }, 500); 
+        robotMoving = path[0];
     }
 
     function mapLoaded() {
@@ -130,7 +151,7 @@
                 row = [];
             }
         }
-        
+
         easystar.setGrid(grid);
         easystar.setAcceptableTiles([0]);
         easystar.enableDiagonals();
