@@ -1,16 +1,17 @@
 extends layout
 
 block content
-  h1= title
   #monitor-wrapper
     canvas#monitor(width=720, height=416)
-    #control-panel
-      fieldset
-        legend Control Panel 
+  #control-panel
+    fieldset
+      legend Control Panel 
+      p
         label(for="from") From Gate
         input#from(type="text", name="from")
+      p
         label(for="to") To Gate
         input#to(type="text", name="to")
-        button#navigate Navigate
+      button#navigate Navigate
       
   
