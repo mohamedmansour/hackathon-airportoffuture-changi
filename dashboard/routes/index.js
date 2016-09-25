@@ -16,11 +16,13 @@ router.post('/callback', function(req, res, next) {
     
     var callback = memoryCommandDb[executionId];
     if (callback) {
-      callback.res.send({
+      var output = {
         status: true,
         executionId: executionId,
         data: req.body
-      });
+      };
+      console.log(output);
+      callback.res.send(output);
       delete memoryCommandDb[executionId];
       res.send({
         status: true
@@ -36,6 +38,7 @@ router.post('/callback', function(req, res, next) {
 
 router.post('/api', function(req, res, next) {
   var currentExecutionId = executionId++;
+  console.log(req.body);
   memoryCommandDb.push({
     executionId: currentExecutionId,
     data: req.body,

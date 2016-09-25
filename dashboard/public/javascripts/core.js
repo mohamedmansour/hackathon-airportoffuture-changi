@@ -306,7 +306,7 @@ var App = (function() {
         }
 
         var theta = Math.atan2(destination.y - robotMoving.y, destination.x - robotMoving.x);
-        return 'It is ' + Math.abs(theta);
+        return Math.abs(theta);
     }
 
     function handleConcern(data) {
