@@ -9,10 +9,6 @@ a {
   color: #00B7FF;
 }
 
-#control-panel {
-  display: none;
-}
-
 #monitor-wrapper {
   background-color: #444;
   width: 720px;

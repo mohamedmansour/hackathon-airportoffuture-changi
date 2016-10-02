@@ -19,7 +19,7 @@ var App = (function() {
 
         if (visitedPath) {
             renderPath(visitedPath, {
-                color: '#000000',
+                color: '#00FF00',
                 lineWidth: 5,
                 lineDash: [5]
             });
@@ -27,7 +27,7 @@ var App = (function() {
 
         if (navigationPath) {
             renderPath(navigationPath, {
-                color: '#000000',
+                color: '#00FF00',
                 lineWidth: 6
             });
         }
@@ -120,14 +120,14 @@ var App = (function() {
         render();
     }
 
-    function loadImage() {
+    function loadImage(src) {
         var image = new Image(canvas.clientWidth, canvas.clientHeight);
         image.async = true;
         image.onload = function() {
             mapImage = this;
             mapLoaded();
         };
-        image.src = '/images/map.png';
+        image.src = src;
     }
 
     function getPosition(evt) {
@@ -159,12 +159,14 @@ var App = (function() {
         fromPosition = fromGatePosition;
         toPosition = gates[toGate];
 
+        var startTime = +new Date;
         easystar.findPath(
             Math.floor(fromPosition.x),
             Math.floor(fromPosition.y),
             Math.floor(toPosition.x),
             Math.floor(toPosition.y),
             function (path) {
+                console.log(elapsed(startTime) + 's - Path');
                 if (path === null) {
                     alert("Path was not found.");
                 } else {
@@ -179,14 +181,21 @@ var App = (function() {
     function onNavigate() {
         var fromGate = from.value;
         var toGate = to.value;
-        triggerRobotNavigation(fromGate, toGate);
+
+        if (!gates[fromGate]) {
+            alert('from not found');
+            return;
+        }
+        if (!gates[toGate]) {
+            alert('to not found');
+            return;
+        }
+        triggerRobotNavigation(gates[fromGate], toGate);
     }
 
     function animatePath(path) {
         var pixelsRemaining = path.length;
-        if (!visitedPath) {
-            //visitedPath = [];
-        }
+
         animateInterval = setInterval(function() {
             if (pixelsRemaining <= 0) {
                 clearInterval(animateInterval);
@@ -214,21 +223,39 @@ var App = (function() {
         easystar = new EasyStar.js();
 
         // Normalize each pixel for each map, 0 = good, 1 = bad.
+        var startTime = +new Date;
         var width = canvas.clientWidth;
         var height = canvas.clientHeight;
         var imageData = context.getImageData(0, 0, width, height);
         var pixel = imageData.data;
-        var r = 0, g = 1, b = 2;
         var grid = [];
         var row = [];
 
         for (var p = 0; p < pixel.length; p+=4) {
-            // If white then change to 1;
-            if (pixel[p+r] > 253 && pixel[p+g] > 253 && pixel[p+b] > 253) {
+            var r = pixel[p];
+            var g = pixel[p+1];
+            var b = pixel[p+2];
+            // NOT ACCESSIBLE
+            if (r > 253 && g > 253 && b > 253) {
                 row.push(1);
+                imageData.data[p] = 0;
+                imageData.data[p+1] = 0;
+                imageData.data[p+2] = 0;
             }
+            // TRAM
+            else if (r < 2 && (g > 119 && g < 124) && (b > 193 && b < 200)) {
+                row.push(2);
+
+                imageData.data[p] = 255;
+                imageData.data[p+1] = 0;
+                imageData.data[p+2] = 0;
+            }
+            // 
             else {
                 row.push(0);
+                imageData.data[p] = 0;
+                imageData.data[p+1] = 0;
+                imageData.data[p+2] = 255;
             }
 
             // Row
@@ -238,9 +265,25 @@ var App = (function() {
             }
         }
 
+        context.putImageData(imageData, 0, 0);
+        var newImage= new Image();
+        newImage.onload = function () {
+            mapImage = this;
+        }
+        newImage.src =  canvas.toDataURL();
+    
+
         easystar.setGrid(grid);
-        easystar.setAcceptableTiles([0]);
+        easystar.setAcceptableTiles([0, 2]);
+        easystar.setTileCost(0, 2);
+        easystar.setTileCost(1, 1);
         easystar.enableDiagonals();
+
+        console.log(elapsed(startTime) + 's - Setup');
+    }
+
+    function elapsed(t) {
+        return (((+new Date) - t) / 1000).toFixed(3);
     }
 
     function startFakeSocketServer() {
@@ -356,12 +399,13 @@ var App = (function() {
     function main() {
         canvas = monitor;
         context = canvas.getContext('2d');
-        loadImage();
+        loadImage('/images/map.png');
         navigate.addEventListener('click', onNavigate, false);
-        startFakeSocketServer();
+        //startFakeSocketServer();
 
         // Initial Robot Position.
         robotMoving = gates['f42'];
+        //labelGatesTraining();
     }
 
     // Run this once nad copy output to a new file.
@@ -370,8 +414,10 @@ var App = (function() {
         canvas.addEventListener('click', function (evt) {
             var position = getPosition(evt);
             var locationName = prompt('location');
-            console.log(locationName + ':{x:' + position.x+',y:'+position.y+'},');
-            localStorage.db[locationName] = position;
+            if (locationName) {
+                console.log(locationName + ':{x:' + position.x+',y:'+position.y+'},');
+                localStorage.db[locationName] = position;
+            }
         });
     }
 
